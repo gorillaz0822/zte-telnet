@@ -2,12 +2,16 @@ name: Build Windows EXE
 
 on:
   push:
-    branches: [ main, master ] # 推送到主分支时自动触发
-  workflow_dispatch: # 允许在 Actions 页面手动点击运行
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      GOOS: windows
+      GOARCH: amd64
+      CGO_ENABLED: 0
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -15,15 +19,15 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22' # 如果项目 go.mod 要求更高版本，请修改此处
+          go-version: '1.25.4'   # 固定版本，保证编译器与运行时库一致
           cache: true
 
       - name: Build EXE
-        run: go build -ldflags="-s -w" -o zte-telnet.exe ./cmd/...
+        run: go build -trimpath -ldflags="-s -w" -o zte-telnet.exe ./cmd/...
 
       - name: Upload EXE
         uses: actions/upload-artifact@v4
         with:
           name: zte-telnet-windows
           path: zte-telnet.exe
-          retention-days: 30 # 产物保留30天，可自行调整
+          retention-days: 30
